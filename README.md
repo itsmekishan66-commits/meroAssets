@@ -52,7 +52,7 @@ cd ../client && npm install
 
 Create `server/.env`:
 ```env
-MONGODB_URI=mongodb://localhost:27017/meroassets
+MONGODB_URI=mongodb://localhost:27017/meroAssets
 PORT=5000
 ```
 
@@ -74,8 +74,8 @@ Open **http://localhost:5173** in your browser.
 
 ## 🔒 How It Works
 
-1. Visit `http://localhost:5173` — you'll see the login/register page
-2. Enter your email — a **6-digit code** is sent (or printed to server console if SMTP is not configured)
+1. Visit `http://localhost:5173` — you'll land on the **sign-in** page
+2. New here? Open **Create an account** (`/register`) and enter your **name, phone, address and email** (no password) — a **6-digit code** is sent (or printed to server console if SMTP is not configured)
 3. Enter the **6-digit code** to verify your identity
 4. You're in! Your own private vault 🎉
 
@@ -114,31 +114,44 @@ Each email is a separate user with a **unique AES-256 encryption key**. No one c
 ## 📁 Project Structure
 
 ```
-meroassets/
+meroAssets-password-manager/
 ├── server/
-│   ├── index.js          # Express API + MongoDB + encryption
-│   ├── .env              # Environment variables
-│   └── package.json
+│   ├── index.js                     # Bootstrap: env → DB → HTTP server
+│   ├── app.js                       # Express app (middleware + routes)
+│   ├── config/
+│   │   ├── env.js                   # Environment variables
+│   │   └── database.js              # MongoDB connection
+│   ├── models/                      # Mongoose models (User, Credential)
+│   ├── modules/
+│   │   ├── auth/                    # Session, register + OTP endpoints
+│   │   ├── otp/                     # Code generation + email delivery
+│   │   └── credentials/             # Credential CRUD + stats
+│   ├── middleware/                  # authenticate, rate limit, error, 404
+│   ├── shared/                      # errors, utils, constants
+│   ├── .env                         # Environment variables (gitignored)
+│   └── .env.example                 # Example environment variables
 ├── client/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── CredentialCard.jsx   # Password card UI
-│   │   │   ├── CredentialForm.jsx   # Add/Edit modal
-│   │   │   ├── OTPModal.jsx         # Email verification popup
-│   │   │   └── PasswordHealth.jsx   # Password strength analysis
-│   │   ├── pages/
-│   │   │   ├── Setup.jsx            # Login/register (email + code)
-│   │   │   └── Dashboard.jsx        # Main dashboard view
-│   │   ├── utils/
-│   │   │   └── api.js               # Axios + helpers
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
+│   ├── main.jsx                     # React entry point
+│   ├── App.jsx                      # Root component (session check)
+│   ├── index.css                    # Global styles
+│   ├── app/
+│   │   ├── routes.jsx               # Route definitions
+│   │   └── providers.jsx            # BrowserRouter + Toaster
+│   ├── features/
+│   │   ├── auth/                    # Auth API + Register page
+│   │   ├── credentials/             # Cards, form, dashboard, API, hook
+│   │   ├── password-health/         # Password analysis
+│   │   ├── otp/                     # Email verification modal + OTP hook
+│   │   └── setup/                   # Sign-in page
+│   ├── shared/                      # Reusable utils, constants, components
+│   ├── lib/
+│   │   └── api-client.js            # fetch wrapper + error shape
 │   ├── tailwind.config.js
 │   ├── vite.config.js
 │   └── package.json
 ├── start.sh
-└── README.md
+├── README.md
+└── COMPLETE_GUIDE.md
 ```
 
 ---
@@ -148,7 +161,8 @@ meroassets/
 ### Auth
 | Method | Endpoint              | Description                              |
 |--------|-----------------------|------------------------------------------|
-| POST   | `/api/auth/start`     | Send verification code (auto-registers if new) |
+| POST   | `/api/auth/register`  | Create account (name + phone + address + email) → send code |
+| POST   | `/api/auth/start`     | Send code to an existing account to sign in |
 | POST   | `/api/auth/verify`    | Verify code → get session token          |
 | GET    | `/api/auth/status`    | Check if session token is valid          |
 | GET    | `/api/auth/me`        | Get current user's email                 |
@@ -168,7 +182,7 @@ meroassets/
 ## 🎨 Customization
 
 ### Change Session Duration
-In `server/index.js`, find and change `5 * 60 * 1000` (5 minutes in ms).
+In `server/shared/constants/index.js`, change `SESSION_TTL_MS` (currently `5 * 60 * 1000`, i.e. 5 minutes).
 
 ### Use MongoDB Atlas
 Replace `MONGODB_URI` in `.env` with your Atlas connection string.
