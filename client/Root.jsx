@@ -4,16 +4,16 @@ import AppRoutes from './app/routes.jsx';
 import { isSessionValid } from './shared/utils/session.js';
 
 export default function App() {
-  const [status, setStatus] = useState(null); // null | { authenticated, email }
+  const [status, setStatus] = useState(null); // null | { authenticated, email, isAdmin }
 
   useEffect(() => {
     if (!isSessionValid()) {
-      setStatus({ authenticated: false, email: null });
+      setStatus({ authenticated: false, email: null, isAdmin: false });
       return;
     }
     authAPI.getStatus()
-      .then(r => setStatus({ authenticated: r.data.authenticated, email: r.data.email || null }))
-      .catch(() => setStatus({ authenticated: false, email: null }));
+      .then(r => setStatus({ authenticated: r.data.authenticated, email: r.data.email || null, isAdmin: Boolean(r.data.isAdmin) }))
+      .catch(() => setStatus({ authenticated: false, email: null, isAdmin: false }));
   }, []);
 
   if (status === null) {
@@ -31,7 +31,8 @@ export default function App() {
     <AppRoutes
       authenticated={status.authenticated}
       email={status.email}
-      onSetupComplete={(email) => setStatus({ authenticated: true, email })}
+      isAdmin={status.isAdmin}
+      onSetupComplete={(email, isAdmin) => setStatus({ authenticated: true, email, isAdmin: Boolean(isAdmin) })}
     />
   );
 }

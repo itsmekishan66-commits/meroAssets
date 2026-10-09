@@ -7,6 +7,7 @@ const { CLIENT_HEADER } = require('./shared/constants');
 const authRoutes = require('./modules/auth/auth.routes');
 const credentialRoutes = require('./modules/credentials/credential.routes');
 const statsRoutes = require('./modules/credentials/stats.routes');
+const adminRoutes = require('./modules/admin/admin.routes');
 const notFound = require('./middleware/not-found');
 const errorHandler = require('./middleware/error-handler');
 
@@ -74,6 +75,7 @@ app.use('/api', (req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/credentials', credentialRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Fallbacks
 app.use(notFound);

@@ -4,6 +4,7 @@ const { createSessionToken } = require('../../shared/utils/session');
 const { OTP_TTL_MS, MAX_OTP_ATTEMPTS } = require('../../shared/constants');
 const otpService = require('../otp/otp.service');
 const User = require('../../models/user.model');
+const activity = require('../activity/activity.service');
 
 const normalizeEmail = (email) => String(email).trim().toLowerCase();
 
@@ -40,6 +41,7 @@ const registerUser = async ({ name, phone, address, email }) => {
     encryptionKey: makeEncryptionKey(),
   });
 
+  activity.logActivity(normalized, 'auth.register', { email: normalized });
   return issueEmailCode(user);
 };
 
@@ -51,6 +53,7 @@ const startAuth = async (email) => {
     throw new AppError('No account found for this email. Please register first.', 404);
   }
 
+  activity.logActivity(user.email, 'auth.code_requested', { email: user.email });
   return issueEmailCode(user);
 };
 
@@ -84,6 +87,7 @@ const verifyEmailCode = async (email, code) => {
   user.emailCodeAttempts = 0;
   await user.save();
 
+  activity.logActivity(user.email, 'auth.login', { email: user.email });
   return user;
 };
 

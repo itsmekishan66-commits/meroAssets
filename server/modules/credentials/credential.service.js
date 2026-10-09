@@ -3,6 +3,7 @@ const { encryptPassword, decryptPassword } = require('../../shared/utils/crypto'
 const { MASKED_PASSWORD } = require('../../shared/constants');
 const repository = require('./credential.repository');
 const mapper = require('./credential.mapper');
+const activity = require('../activity/activity.service');
 
 // GET all credentials (passwords masked)
 const listCredentials = async (userEmail) => {
@@ -16,6 +17,7 @@ const revealCredential = async (id, userEmail, encryptionKey) => {
   if (!credential) throw new AppError('Not found', 404);
 
   const password = decryptPassword(credential.encryptedPassword, encryptionKey);
+  activity.logActivity(userEmail, 'credential.reveal', { site: credential.site });
   return mapper.toRevealed(credential, password);
 };
 
@@ -35,6 +37,7 @@ const createCredential = async (userEmail, encryptionKey, data) => {
     category: category || 'General',
   });
 
+  activity.logActivity(userEmail, 'credential.create', { site: credential.site });
   return mapper.toResponse(credential);
 };
 
@@ -59,6 +62,7 @@ const updateCredential = async (id, userEmail, encryptionKey, data) => {
 
   credential.updatedAt = new Date();
   await repository.save(credential);
+  activity.logActivity(userEmail, 'credential.update', { site: credential.site });
 
   return mapper.toResponse(credential);
 };
@@ -67,6 +71,7 @@ const updateCredential = async (id, userEmail, encryptionKey, data) => {
 const deleteCredential = async (id, userEmail) => {
   const credential = await repository.removeOne(id, userEmail);
   if (!credential) throw new AppError('Not found', 404);
+  activity.logActivity(userEmail, 'credential.delete', { site: credential.site });
   return { success: true };
 };
 

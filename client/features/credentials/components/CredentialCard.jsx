@@ -147,6 +147,19 @@ export default function CredentialCard({ credential, onEdit, onFavoriteToggle, o
             </button>
           </div>
         )}
+        {credential.url && (
+          <div className="flex items-center gap-2 text-xs">
+            <ExternalLink size={11} className="text-vault-muted flex-shrink-0" />
+            <a
+              href={credential.url.startsWith('http') ? credential.url : `https://${credential.url}`}
+              target="_blank" rel="noopener noreferrer"
+              title={credential.url}
+              className="text-blue-500 hover:underline truncate min-w-0"
+            >
+              {credential.url}
+            </a>
+          </div>
+        )}
 
         {/* Password row */}
         <div className="flex items-center gap-2 mt-2 pt-2 border-t border-vault-border">

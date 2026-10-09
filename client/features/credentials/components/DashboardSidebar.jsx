@@ -14,6 +14,8 @@ export default function DashboardSidebar({
   sessionValid,
   onLockSession,
   userEmail,
+  isAdmin = false,
+  onOpenAdmin,
   onLogout,
 }) {
   return (
@@ -78,6 +80,15 @@ export default function DashboardSidebar({
             </button>
           )}
         </div>
+
+        {/* Admin Panel — admins only */}
+        {isAdmin && (
+          <button onClick={onOpenAdmin}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-vault-text border border-vault-border hover:border-black/40 transition-all">
+            <Shield size={13} />
+            <span>Admin Panel</span>
+          </button>
+        )}
 
         {/* Email */}
         <div className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-vault-muted border border-vault-border">

@@ -1,5 +1,6 @@
 const { decodeSessionToken, isSessionExpired } = require('../../shared/utils/session');
 const { SESSION_HEADER } = require('../../shared/constants');
+const env = require('../../config/env');
 const authService = require('./auth.service');
 const { hasEmail, hasEmailAndCode, validateRegistration } = require('./auth.validation');
 const { isValidEmailCode } = require('../otp/otp.validation');
@@ -19,7 +20,7 @@ const status = async (req, res) => {
       return res.json({ authenticated: false });
     }
 
-    res.json({ authenticated: true, email: user.email });
+    res.json({ authenticated: true, email: user.email, isAdmin: env.isAdminEmail(user.email) });
   } catch {
     res.json({ authenticated: false });
   }
@@ -74,7 +75,12 @@ const verifyCode = async (req, res, next) => {
 
     const user = await authService.verifyEmailCode(email, code);
     const sessionToken = authService.issueSessionToken(user);
-    res.json({ success: true, sessionToken, email: user.email });
+    res.json({
+      success: true,
+      sessionToken,
+      email: user.email,
+      isAdmin: env.isAdminEmail(user.email),
+    });
   } catch (err) {
     next(err);
   }

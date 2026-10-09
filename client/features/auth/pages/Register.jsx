@@ -20,7 +20,7 @@ export default function Register() {
   const { otp, inputRefs, focus, reset, handleChange, handleKeyDown, handlePaste } = useOtpInput();
 
   useEffect(() => {
-    if (isSessionValid()) navigate('/app');
+    if (isSessionValid()) navigate('/dashboard');
   }, [navigate]);
 
   const setField = (key) => (e) => {
@@ -66,7 +66,7 @@ export default function Register() {
       const res = await authAPI.verify(form.email, code);
       saveSession(res.data.sessionToken);
       toast.success('Verified!');
-      setTimeout(() => { navigate('/app'); }, 800);
+      setTimeout(() => { navigate('/dashboard'); }, 800);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Invalid code');
       reset(true);

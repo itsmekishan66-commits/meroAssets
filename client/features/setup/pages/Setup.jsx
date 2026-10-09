@@ -17,7 +17,7 @@ export default function Setup({ onComplete }) {
 
   useEffect(() => {
     if (isSessionValid()) {
-      navigate('/app');
+      navigate('/dashboard');
     }
   }, [navigate]);
 
@@ -46,7 +46,9 @@ export default function Setup({ onComplete }) {
       const res = await authAPI.verify(email, code);
       saveSession(res.data.sessionToken);
       toast.success('Verified!');
-      setTimeout(() => { onComplete(email); navigate('/app'); }, 800);
+      // Admins (ADMIN_EMAILS in client/.env) land in the admin panel.
+      const nextPath = res.data.isAdmin ? '/admin' : '/dashboard';
+      setTimeout(() => { onComplete(email, res.data.isAdmin); navigate(nextPath); }, 800);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Invalid code');
       reset(true);

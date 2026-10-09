@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Menu, LogOut } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
 import { credentialAPI } from '../services/credential-api.js';
 import CredentialForm from '../components/CredentialForm.jsx';
 import DashboardSidebar from '../components/DashboardSidebar.jsx';
@@ -14,8 +14,17 @@ import useCredentials from '../hooks/useCredentials.js';
 import { isSessionValid, getSessionExpiry, clearSession } from '../../../shared/utils/session.js';
 import toast from 'react-hot-toast';
 
-export default function Dashboard({ userEmail }) {
+// Internal page id <-> URL slug, so every tab is shareable (e.g. /dashboard/password-health).
+const PAGE_SLUGS = { vault: 'vault', health: 'password-health' };
+const SLUG_TO_PAGE = Object.fromEntries(
+  Object.entries(PAGE_SLUGS).map(([id, slug]) => [slug, id]),
+);
+const DEFAULT_PAGE = 'vault';
+
+export default function Dashboard({ userEmail, isAdmin }) {
   const navigate = useNavigate();
+  const { tab } = useParams();
+  const activePage = SLUG_TO_PAGE[tab] || DEFAULT_PAGE;
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [showFavorites, setShowFavorites] = useState(false);
@@ -25,7 +34,6 @@ export default function Dashboard({ userEmail }) {
   const [showOTP, setShowOTP] = useState(false);
   const [pendingRevealId, setPendingRevealId] = useState(null);
   const [revealedMap, setRevealedMap] = useState({});
-  const [activePage, setActivePage] = useState('vault');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -130,7 +138,17 @@ export default function Dashboard({ userEmail }) {
 
   const usedCategories = ['All', ...new Set(credentials.map(c => c.category))];
 
-  const handleNavigate = (id) => { setActivePage(id); setSidebarOpen(false); };
+  // Keep the URL canonical: bare /dashboard or an unknown slug falls back to the default tab.
+  useEffect(() => {
+    if (tab !== PAGE_SLUGS[activePage]) {
+      navigate(`/dashboard/${PAGE_SLUGS[activePage]}`, { replace: true });
+    }
+  }, [tab, activePage, navigate]);
+
+  const handleNavigate = (id) => {
+    setSidebarOpen(false);
+    navigate(`/dashboard/${PAGE_SLUGS[id] || PAGE_SLUGS[DEFAULT_PAGE]}`);
+  };
 
   const pageTitle = { vault: 'My Vault', health: 'Password Health' };
 
@@ -145,6 +163,8 @@ export default function Dashboard({ userEmail }) {
           sessionValid={sessionValid}
           onLockSession={handleClearSession}
           userEmail={userEmail}
+          isAdmin={isAdmin}
+          onOpenAdmin={() => navigate('/admin')}
           onLogout={() => setShowLogoutConfirm(true)}
         />
       </div>
@@ -167,6 +187,8 @@ export default function Dashboard({ userEmail }) {
                 sessionValid={sessionValid}
                 onLockSession={handleClearSession}
                 userEmail={userEmail}
+                isAdmin={isAdmin}
+                onOpenAdmin={() => navigate('/admin')}
                 onLogout={() => setShowLogoutConfirm(true)}
               />
             </motion.div>
@@ -182,17 +204,6 @@ export default function Dashboard({ userEmail }) {
             <Menu size={20}/>
           </button>
           <h1 className="font-display text-lg font-bold text-vault-text">{pageTitle[activePage]}</h1>
-
-          <div className="ml-auto flex items-center gap-2">
-            <button onClick={() => setShowOTP(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
-              style={sessionValid
-                ? { background: '#00000010', color: '#000000', borderColor: '#00000030' }
-                : { background: 'rgba(0,0,0,0.04)', color: '#6b6b6b', borderColor: '#e5e5e5' }}>
-              <ShieldCheck size={13}/>
-              {sessionValid ? 'Unlocked' : 'Verify OTP'}
-            </button>
-          </div>
         </header>
 
         {/* Page body */}
